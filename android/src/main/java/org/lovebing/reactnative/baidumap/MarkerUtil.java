@@ -22,20 +22,38 @@ public class MarkerUtil {
         LatLng position = getLatLngFromOption(option);
         maker.setPosition(position);
         maker.setTitle(option.getString("title"));
+	int icon = selectedImage(option);	
+        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(icon);
+	maker.setIcon(bitmap);
     }
 
     public static Marker addMarker(MapView mapView, ReadableMap option) {
-        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.mipmap.icon_gcoding);
+	int icon = selectedImage(option);	
+        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(icon);
         LatLng position = getLatLngFromOption(option);
         OverlayOptions overlayOptions = new MarkerOptions()
                 .icon(bitmap)
                 .position(position)
                 .title(option.getString("title"));
-
         Marker marker = (Marker)mapView.getMap().addOverlay(overlayOptions);
         return marker;
     }
-
+    
+    private static int selectedImage(ReadableMap option) {
+	int icon;
+	boolean selected;
+	if(!option.hasKey("selected")) {
+	    selected = false;
+	} else {
+	    selected = option.getBoolean("selected");
+	}
+	if(selected == true) {
+	    icon = R.mipmap.icon_kezulin;
+	} else {
+	    icon = R.mipmap.icon_yijinzulin;
+	}
+	return icon;
+    }
 
     private static LatLng getLatLngFromOption(ReadableMap option) {
         double latitude = option.getDouble("latitude");

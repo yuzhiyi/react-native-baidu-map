@@ -26,10 +26,14 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.common.MapBuilder;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by lovebing on 12/20/2015.
@@ -44,6 +48,9 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     private HashMap<String, Marker> mMarkerMap = new HashMap<>();
     private HashMap<String, List<Marker>> mMarkersMap = new HashMap<>();
     private TextView mMarkerText;
+    private MapView mapView;
+
+    public static final int UPDATE_MARKER = 1;
 
     public String getName() {
         return REACT_CLASS;
@@ -57,6 +64,7 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     public MapView createViewInstance(ThemedReactContext context) {
         mReactContext = context;
         MapView mapView =  new MapView(context);
+        this.mapView = mapView;
         setListeners(mapView);
         return mapView;
     }
@@ -78,6 +86,31 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
         }
 
     }
+
+    @Override
+    public Map<String, Integer> getCommandsMap() {
+        return MapBuilder.of(
+                "updateMaker",
+                BaiduMapViewManager.UPDATE_MARKER
+        );
+    }
+
+    @Override
+    public void receiveCommand(MapView view, int commandType, @Nullable ReadableArray args) {
+
+        switch (commandType) {
+            case BaiduMapViewManager.UPDATE_MARKER:
+                updateMarker(view,args.getMap(0));
+                break;
+            default:
+                throw new JSApplicationIllegalArgumentException(String.format(
+                        "Unsupported commadn %d received by $s",
+                        commandType,
+                        this.getClass().getSimpleName()
+                ));
+        }
+    }
+
 
     @ReactProp(name = "zoomControlsVisible")
     public void setZoomControlsVisible(MapView mapView, boolean zoomControlsVisible) {
@@ -121,6 +154,20 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
 
     @ReactProp(name="marker")
     public void setMarker(MapView mapView, ReadableMap option) {
+        if(option != null) {
+            String key = "marker_" + mapView.getId();
+            Marker marker = mMarkerMap.get(key);
+            if(marker != null) {
+                MarkerUtil.updateMaker(marker, option);
+            }
+            else {
+                marker = MarkerUtil.addMarker(mapView, option);
+                mMarkerMap.put(key, marker);
+            }
+        }
+    }
+
+    private void updateMarker(MapView mapView, ReadableMap option) {
         if(option != null) {
             String key = "marker_" + mapView.getId();
             Marker marker = mMarkerMap.get(key);
@@ -251,15 +298,6 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
         map.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                if(marker.getTitle().length() > 0) {
-                    mMarkerText.setText(marker.getTitle());
-                    InfoWindow infoWindow = new InfoWindow(mMarkerText, marker.getPosition(), -80);
-                    mMarkerText.setVisibility(View.GONE);
-                    mapView.getMap().showInfoWindow(infoWindow);
-                }
-                else {
-                    mapView.getMap().hideInfoWindow();
-                }
                 WritableMap writableMap = Arguments.createMap();
                 WritableMap position = Arguments.createMap();
                 position.putDouble("latitude", marker.getPosition().latitude);
