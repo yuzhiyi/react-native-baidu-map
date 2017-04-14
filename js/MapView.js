@@ -15,12 +15,8 @@ import MapTypes from './MapTypes';
 
 const react_native = require('react-native');
 const RCTBaiduMapView = react_native.UIManager.RCTBaiduMapView;
-
-var COMMAND_UPDATE_MARKER = 1;
-if (Platform.OS === 'android') {
-  const Commands = RCTBaiduMapView.Commands;
-  COMMAND_UPDATE_MARKER = Commands.updateMaker;
-}
+const Commands = RCTBaiduMapView.Commands;
+const COMMAND_UPDATE_MARKER = Commands.updateMaker;
 
 export default class MapView extends Component {
   static propTypes = {
@@ -31,6 +27,7 @@ export default class MapView extends Component {
     mapType: PropTypes.number,
     zoom: PropTypes.number,
     center: PropTypes.object,
+    local: PropTypes.object,
     marker: PropTypes.object,
     markers: PropTypes.array,
     childrenPoints: PropTypes.array,
@@ -53,6 +50,7 @@ export default class MapView extends Component {
     marker: null,
     markers: [],
     center: null,
+    local: null,
     zoom: 10
   };
 
@@ -67,7 +65,7 @@ export default class MapView extends Component {
   }
 
   updateMarker(marker) {
-    Platform.OS === 'android' && react_native.UIManager.dispatchViewManagerCommand(react_native.findNodeHandle(this), COMMAND_UPDATE_MARKER, [marker]);
+    react_native.UIManager.dispatchViewManagerCommand(react_native.findNodeHandle(this), COMMAND_UPDATE_MARKER, [marker]);
 
   }
 

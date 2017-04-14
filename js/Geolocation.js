@@ -95,5 +95,10 @@ export default {
         resolve(resp);
       });
     });
+  },
+  addOnGetCurrentLocationPosition(handler) {
+    DeviceEventEmitter.once('onGetCurrentLocationPosition', resp => {
+        handler(resp);
+      });
   }
 };

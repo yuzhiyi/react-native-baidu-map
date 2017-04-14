@@ -17,6 +17,8 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.MapViewLayoutParams;
 import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.MyLocationConfiguration;
+import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
@@ -35,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static android.R.attr.direction;
+
 /**
  * Created by lovebing on 12/20/2015.
  */
@@ -49,6 +53,7 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     private HashMap<String, List<Marker>> mMarkersMap = new HashMap<>();
     private TextView mMarkerText;
     private MapView mapView;
+    private volatile boolean isFirstLoc = true; // 是否首次定位
 
     public static final int UPDATE_MARKER = 1;
 
@@ -63,7 +68,7 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
 
     public MapView createViewInstance(ThemedReactContext context) {
         mReactContext = context;
-        MapView mapView =  new MapView(context);
+        MapView mapView = new MapView(context);
         this.mapView = mapView;
         setListeners(mapView);
         return mapView;
@@ -71,10 +76,10 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
 
     @Override
     public void addView(MapView parent, View child, int index) {
-        if(childrenPoints != null) {
+        if (childrenPoints != null) {
             Point point = new Point();
             ReadableArray item = childrenPoints.getArray(index);
-            if(item != null) {
+            if (item != null) {
                 point.set(item.getInt(0), item.getInt(1));
                 MapViewLayoutParams mapViewLayoutParams = new MapViewLayoutParams
                         .Builder()
@@ -100,7 +105,7 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
 
         switch (commandType) {
             case BaiduMapViewManager.UPDATE_MARKER:
-                updateMarker(view,args.getMap(0));
+                updateMarker(view, args.getMap(0));
                 break;
             default:
                 throw new JSApplicationIllegalArgumentException(String.format(
@@ -117,12 +122,12 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
         mapView.showZoomControls(zoomControlsVisible);
     }
 
-    @ReactProp(name="trafficEnabled")
+    @ReactProp(name = "trafficEnabled")
     public void setTrafficEnabled(MapView mapView, boolean trafficEnabled) {
         mapView.getMap().setTrafficEnabled(trafficEnabled);
     }
 
-    @ReactProp(name="baiduHeatMapEnabled")
+    @ReactProp(name = "baiduHeatMapEnabled")
     public void setBaiduHeatMapEnabled(MapView mapView, boolean baiduHeatMapEnabled) {
         mapView.getMap().setBaiduHeatMapEnabled(baiduHeatMapEnabled);
     }
@@ -132,15 +137,16 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
         mapView.getMap().setMapType(mapType);
     }
 
-    @ReactProp(name="zoom")
+    @ReactProp(name = "zoom")
     public void setZoom(MapView mapView, float zoom) {
         MapStatus mapStatus = new MapStatus.Builder().zoom(zoom).build();
         MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
         mapView.getMap().setMapStatus(mapStatusUpdate);
     }
-    @ReactProp(name="center")
+
+    @ReactProp(name = "center")
     public void setCenter(MapView mapView, ReadableMap position) {
-        if(position != null) {
+        if (position != null) {
             double latitude = position.getDouble("latitude");
             double longitude = position.getDouble("longitude");
             LatLng point = new LatLng(latitude, longitude);
@@ -152,15 +158,44 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
         }
     }
 
-    @ReactProp(name="marker")
+    @ReactProp(name = "local")
+    public void setLocal(MapView mapView, ReadableMap position) {
+        if (position != null && position.hasKey("latitude")) {
+            double latitude = position.getDouble("latitude");
+            double longitude = position.getDouble("longitude");
+            double radius = position.getDouble("radius");
+            double direction = 0;
+            if(position.hasKey("direction")) {
+                direction = position.getDouble("direction");
+            }
+            BaiduMap mBaiduMap = mapView.getMap();
+            mBaiduMap.setMyLocationEnabled(true);
+            mBaiduMap.setMyLocationConfigeration(new MyLocationConfiguration(
+                    MyLocationConfiguration.LocationMode.NORMAL, true, null));
+            MyLocationData locData = new MyLocationData.Builder()
+                    .accuracy((float) radius)
+                    // 此处设置开发者获取到的方向信息，顺时针0-360
+                    .direction((float) direction).latitude(latitude)
+                    .longitude(longitude).build();
+            mBaiduMap.setMyLocationData(locData);
+            if (isFirstLoc) {
+                isFirstLoc = false;
+                LatLng point = new LatLng(latitude, longitude);
+                MapStatus.Builder builder = new MapStatus.Builder();
+                builder.target(point).zoom(18.0f);
+                mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(builder.build()));
+            }
+        }
+    }
+
+    @ReactProp(name = "marker")
     public void setMarker(MapView mapView, ReadableMap option) {
-        if(option != null) {
+        if (option != null) {
             String key = "marker_" + mapView.getId();
             Marker marker = mMarkerMap.get(key);
-            if(marker != null) {
+            if (marker != null) {
                 MarkerUtil.updateMaker(marker, option);
-            }
-            else {
+            } else {
                 marker = MarkerUtil.addMarker(mapView, option);
                 mMarkerMap.put(key, marker);
             }
@@ -168,36 +203,34 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     }
 
     private void updateMarker(MapView mapView, ReadableMap option) {
-        if(option != null) {
+        if (option != null) {
             String key = "marker_" + mapView.getId();
             Marker marker = mMarkerMap.get(key);
-            if(marker != null) {
+            if (marker != null) {
                 MarkerUtil.updateMaker(marker, option);
-            }
-            else {
+            } else {
                 marker = MarkerUtil.addMarker(mapView, option);
                 mMarkerMap.put(key, marker);
             }
         }
     }
 
-    @ReactProp(name="markers")
+    @ReactProp(name = "markers")
     public void setMarkers(MapView mapView, ReadableArray options) {
         String key = "markers_" + mapView.getId();
         List<Marker> markers = mMarkersMap.get(key);
-        if(markers == null) {
+        if (markers == null) {
             markers = new ArrayList<>();
         }
         for (int i = 0; i < options.size(); i++) {
             ReadableMap option = options.getMap(i);
-            if(markers.size() > i + 1 && markers.get(i) != null) {
+            if (markers.size() > i + 1 && markers.get(i) != null) {
                 MarkerUtil.updateMaker(markers.get(i), option);
-            }
-            else {
+            } else {
                 markers.add(i, MarkerUtil.addMarker(mapView, option));
             }
         }
-        if(options.size() < markers.size()) {
+        if (options.size() < markers.size()) {
             int start = markers.size() - 1;
             int end = options.size();
             for (int i = start; i >= end; i--) {
@@ -214,13 +247,12 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     }
 
     /**
-     *
      * @param mapView
      */
     private void setListeners(final MapView mapView) {
         BaiduMap map = mapView.getMap();
 
-        if(mMarkerText == null) {
+        if (mMarkerText == null) {
             mMarkerText = new TextView(mapView.getContext());
             mMarkerText.setBackgroundResource(R.drawable.popup);
             mMarkerText.setPadding(32, 32, 32, 32);
@@ -250,7 +282,7 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
 
             @Override
             public void onMapStatusChangeFinish(MapStatus mapStatus) {
-                if(mMarkerText.getVisibility() != View.GONE) {
+                if (mMarkerText.getVisibility() != View.GONE) {
                     mMarkerText.setVisibility(View.GONE);
                 }
                 sendEvent(mapView, "onMapStatusChangeFinish", getEventParams(mapStatus));
@@ -312,7 +344,6 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     }
 
     /**
-     *
      * @param eventName
      * @param params
      */

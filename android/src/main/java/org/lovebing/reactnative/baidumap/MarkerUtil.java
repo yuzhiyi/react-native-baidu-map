@@ -25,6 +25,7 @@ public class MarkerUtil {
 	int icon = selectedImage(option);	
         BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(icon);
 	maker.setIcon(bitmap);
+	maker.setDraggable(false);
     }
 
     public static Marker addMarker(MapView mapView, ReadableMap option) {
@@ -36,6 +37,7 @@ public class MarkerUtil {
                 .position(position)
                 .title(option.getString("title"));
         Marker marker = (Marker)mapView.getMap().addOverlay(overlayOptions);
+        marker.setDraggable(false);
         return marker;
     }
     
