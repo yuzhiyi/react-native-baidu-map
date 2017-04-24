@@ -109,6 +109,7 @@ didSelectAnnotationView:(BMKAnnotationView *)view {
     if ([annotation isKindOfClass:[BMKPointAnnotation class]]) {
         BMKPinAnnotationView *newAnnotationView = [[BMKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"myAnnotation"];
         newAnnotationView.pinColor = BMKPinAnnotationColorPurple;
+        newAnnotationView.image = [UIImage imageNamed:@"icon_kezulin"];
         newAnnotationView.animatesDrop = YES;
         return newAnnotationView;
     }

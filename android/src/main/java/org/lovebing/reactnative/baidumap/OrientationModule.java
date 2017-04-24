@@ -38,10 +38,8 @@ public class OrientationModule extends BaseModule implements MyOrientationListen
 
     @Override
     public void onOrientationChanged(float direction) {
-        Log.i("onReceiveLocation", direction+"");
         WritableMap params = Arguments.createMap();
         params.putDouble("direction", (double)direction);
-        Log.i("onReceiveLocation", "onOrientationChanged");
         sendEvent("onOrientationChanged", params);
     }
 }
