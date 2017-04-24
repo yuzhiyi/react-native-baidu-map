@@ -97,7 +97,7 @@ export default {
     });
   },
   addOnGetCurrentLocationPosition(handler) {
-    DeviceEventEmitter.once('onGetCurrentLocationPosition', resp => {
+    DeviceEventEmitter.addListener('onGetCurrentLocationPosition', resp => {
         handler(resp);
       });
   }

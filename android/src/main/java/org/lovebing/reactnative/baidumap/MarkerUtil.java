@@ -43,13 +43,17 @@ public class MarkerUtil {
     
     private static int selectedImage(ReadableMap option) {
 	int icon;
-	boolean selected;
-	if(!option.hasKey("selected")) {
-	    selected = false;
+	int status = 1;
+	if(!option.hasKey("status")) {
+	    status = 1;
 	} else {
-	    selected = option.getBoolean("selected");
+	    status = option.getInt("status");
 	}
-	if(selected == true) {
+	if(status == 0) {
+	    icon = R.mipmap.icon_bukezulin;
+	} else if(status == 1){
+	    icon = R.mipmap.icon_kezulin;
+	} else if(status == 2){
 	    icon = R.mipmap.icon_kezulin;
 	} else {
 	    icon = R.mipmap.icon_yijinzulin;
