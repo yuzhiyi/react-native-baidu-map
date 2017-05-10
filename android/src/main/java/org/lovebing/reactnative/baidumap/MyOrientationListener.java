@@ -73,7 +73,9 @@ public class MyOrientationListener implements SensorEventListener {
 
     // 停止检测
     public void stop() {
-        sensorManager.unregisterListener(this);
+        if(sensorManager != null){
+            sensorManager.unregisterListener(this);
+	}
     }
 
     @Override
