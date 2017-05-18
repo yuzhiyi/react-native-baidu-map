@@ -47,7 +47,7 @@ project(':react-native-baidu-map').projectDir = new File(settingsDir, '../node_m
       template: path.join(__dirname, 'index.html')
     }),
 ```
-同时也在 react-web 自动生成的原始 index.html 中添加一个 `<script src="http://api.map.baidu.com/api?v=1.4&ak="></script>` 成为类似如下的 web/index.html 文件：
+同时也在 react-web 自动生成的原始 index.html 中添加一个 `<script src="https://api.map.baidu.com/api?v=1.4&ak="></script>` 成为类似如下的 web/index.html 文件：
 ```
 <!DOCTYPE html>
 <html>
@@ -60,7 +60,7 @@ project(':react-native-baidu-map').projectDir = new File(settingsDir, '../node_m
   </head>
   <body>
 
-    <script src="http://api.map.baidu.com/api?v=1.4&ak="></script>
+    <script src="https://api.map.baidu.com/api?v=1.4&ak="></script>
     <script src="bundle.js"></script>
 
   </body>
