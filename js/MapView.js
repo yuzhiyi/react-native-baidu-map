@@ -1,4 +1,5 @@
 import {
+  Image,
   requireNativeComponent,
   View,
   NativeModules,
@@ -62,6 +63,7 @@ export default class MapView extends Component {
 
   constructor() {
     super();
+    this.map;
   }
 
   _onChange(event) {
@@ -76,11 +78,28 @@ export default class MapView extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (Platform.OS === 'web') {
+      if (nextProps.markers !== this.props.markers) {
+        nextProps.markers.map(marker => {
+          var icon = marker.status ? require('../android/src/main/res/mipmap-hdpi/icon_kezulin.png') : require('../android/src/main/res/mipmap-hdpi/icon_bukezulin.png');
+          Image.getSize(icon, (w, h) => {
+            var m = new BMap.Marker(new BMap.Point(marker.longitude, marker.latitude), {
+              icon: new BMap.Icon(icon, new BMap.Size(w, h))
+            });
+            this.props.onMarkerClick && m.addEventListener('click', () => this.props.onMarkerClick(marker));
+            this.map.addOverlay(m);
+          });
+        });
+      }
+    }
+  }
+
   componentDidMount() {
     if (Platform.OS === 'web') {
-      const map = new BMap.Map(this.props.id);
-      map.enableScrollWheelZoom(true);
-      this.props.callback(map);
+      this.map = new BMap.Map(this.props.id);
+      this.map.enableScrollWheelZoom(true);
+      this.props.callback(this.map);
     }
   }
 
