@@ -81,6 +81,9 @@ export default class MapView extends Component {
 
   componentDidMount() {
     if (Platform.OS === 'web') {
+      // 因 BMap.Map() 自带的 click 事件会连续触发两次，所以还是用 element 的 onclick 了
+      document.getElementById(this.id).onclick = e => this.props.onMapClick && this.props.onMapClick();
+
       const map = new BMap.Map(this.id);
       map.enableScrollWheelZoom(true);
       this.props.callback(map);
