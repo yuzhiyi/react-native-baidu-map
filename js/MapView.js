@@ -1,5 +1,4 @@
 import {
-  Image,
   requireNativeComponent,
   View,
   NativeModules,
@@ -47,7 +46,6 @@ export default class MapView extends Component {
   };
 
   static defaultProps = {
-    id: `itminus_bmap${parseInt('' + Math.random() * 10000000, 10)}`, // Web 的容器 <div/> 的 id
     callback: map => map.centerAndZoom('杭州', 15), // 当检测到 Web 的 BMap 加载完毕后执行
     zoomControlsVisible: true,
     trafficEnabled: false,
@@ -63,7 +61,6 @@ export default class MapView extends Component {
 
   constructor() {
     super();
-    this.map;
   }
 
   _onChange(event) {
@@ -78,28 +75,18 @@ export default class MapView extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (Platform.OS === 'web') {
-      if (nextProps.markers !== this.props.markers) {
-        nextProps.markers.map(marker => {
-          var icon = marker.status ? require('../android/src/main/res/mipmap-hdpi/icon_kezulin.png') : require('../android/src/main/res/mipmap-hdpi/icon_bukezulin.png');
-          Image.getSize(icon, (w, h) => {
-            var m = new BMap.Marker(new BMap.Point(marker.longitude, marker.latitude), {
-              icon: new BMap.Icon(icon, new BMap.Size(w, h))
-            });
-            this.props.onMarkerClick && m.addEventListener('click', () => this.props.onMarkerClick(marker));
-            this.map.addOverlay(m);
-          });
-        });
-      }
-    }
+  componentWillMount() {
+    this.id = `itminus_bmap${parseInt('' + Math.random() * 10000000, 10)}`;
   }
 
   componentDidMount() {
     if (Platform.OS === 'web') {
-      this.map = new BMap.Map(this.props.id);
-      this.map.enableScrollWheelZoom(true);
-      this.props.callback(this.map);
+      // 因 BMap.Map() 自带的 click 事件会连续触发两次，所以还是用 element 的 onclick 了
+      document.getElementById(this.id).onclick = e => this.props.onMapClick && this.props.onMapClick();
+
+      const map = new BMap.Map(this.id);
+      map.enableScrollWheelZoom(true);
+      this.props.callback(map);
     }
   }
 
@@ -107,7 +94,7 @@ export default class MapView extends Component {
     if (Platform.OS === 'web') {
       return React.createElement('div', {
         style: this.props.style,
-        id: this.props.id
+        id: this.id
       });
     } else {
       return <BaiduMapView {...this.props} onChange={this._onChange.bind(this)}/>;

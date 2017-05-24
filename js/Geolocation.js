@@ -89,7 +89,10 @@ export default {
               longitude: resp.point.lng,
               latitude: resp.point.lat,
               address: resp.addressComponent.province + resp.addressComponent.city + resp.addressComponent.district + resp.addressComponent.street + resp.addressComponent.streetNumber,
-              city: resp.addressComponent.city
+              province: resp.addressComponent.province,
+              city: resp.addressComponent.city,
+              district: resp.addressComponent.district,
+              location: resp.addressComponent.street
             });
           });
           geolocationControl.addEventListener('locationError', resp => {
