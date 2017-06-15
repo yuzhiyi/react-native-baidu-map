@@ -92,7 +92,7 @@ export default {
               province: resp.addressComponent.province,
               city: resp.addressComponent.city,
               district: resp.addressComponent.district,
-              location: resp.addressComponent.street
+              street: resp.addressComponent.street
             });
           });
           geolocationControl.addEventListener('locationError', resp => {
