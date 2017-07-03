@@ -18,6 +18,7 @@ if (Platform.OS !== 'web') {
   var RCTBaiduMapView = react_native.UIManager.RCTBaiduMapView;
   var Commands = RCTBaiduMapView.Commands;
   var COMMAND_UPDATE_MARKER = Commands.updateMaker;
+  var COMMAND_UPDATE_CENTER = Commands.updateCenter;
 }
 
 export default class MapView extends Component {
@@ -72,6 +73,12 @@ export default class MapView extends Component {
   updateMarker(marker) {
     if (Platform.OS !== 'web') {
       react_native.UIManager.dispatchViewManagerCommand(react_native.findNodeHandle(this), COMMAND_UPDATE_MARKER, [marker]);
+    }
+  }
+
+  updateCenter(center) {
+    if (Platform.OS !== 'web') {
+      react_native.UIManager.dispatchViewManagerCommand(react_native.findNodeHandle(this), COMMAND_UPDATE_CENTER, [center]);
     }
   }
 

@@ -56,6 +56,7 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     private volatile boolean isFirstLoc = true; // 是否首次定位
 
     public static final int UPDATE_MARKER = 1;
+    public static final int UPDATE_CENTER = 2;
 
     public String getName() {
         return REACT_CLASS;
@@ -96,7 +97,9 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     public Map<String, Integer> getCommandsMap() {
         return MapBuilder.of(
                 "updateMaker",
-                BaiduMapViewManager.UPDATE_MARKER
+                BaiduMapViewManager.UPDATE_MARKER,
+		"updateCenter",
+                BaiduMapViewManager.UPDATE_CENTER
         );
     }
 
@@ -107,6 +110,9 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
             case BaiduMapViewManager.UPDATE_MARKER:
                 updateMarker(view, args.getMap(0));
                 break;
+	    case BaiduMapViewManager.UPDATE_CENTER: 
+		updateCenter(view, args.getMap(0));
+		break;
             default:
                 throw new JSApplicationIllegalArgumentException(String.format(
                         "Unsupported commadn %d received by $s",
@@ -212,6 +218,19 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
                 marker = MarkerUtil.addMarker(mapView, option);
                 mMarkerMap.put(key, marker);
             }
+        }
+    }
+    
+    private void updateCenter(MapView mapView, ReadableMap position) {
+	if (position != null) {
+            double latitude = position.getDouble("latitude");
+            double longitude = position.getDouble("longitude");
+            LatLng point = new LatLng(latitude, longitude);
+            MapStatus mapStatus = new MapStatus.Builder()
+                    .target(point)
+                    .build();
+            MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
+            mapView.getMap().animateMapStatus(mapStatusUpdate);
         }
     }
 
@@ -340,8 +359,8 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
                 return true;
             }
         });
-
     }
+    
 
     /**
      * @param eventName
