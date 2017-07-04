@@ -9,6 +9,7 @@ import com.baidu.mapapi.map.InfoWindow;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
+import com.baidu.mapapi.map.MarkerOptions.MarkerAnimateType;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.facebook.react.bridge.ReadableMap;
@@ -33,6 +34,7 @@ public class MarkerUtil {
         BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(icon);
         LatLng position = getLatLngFromOption(option);
         OverlayOptions overlayOptions = new MarkerOptions()
+		.animateType(MarkerAnimateType.grow)
                 .icon(bitmap)
                 .position(position)
                 .title(option.getString("title"));
