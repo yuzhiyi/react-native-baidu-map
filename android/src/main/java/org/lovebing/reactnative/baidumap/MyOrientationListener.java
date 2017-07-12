@@ -5,102 +5,74 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
-
-/**
- * Created by chenwenyu on 17-4-12.
- */
 
 public class MyOrientationListener implements SensorEventListener {
-    private Context context;
-    private SensorManager sensorManager;
-    private Sensor accelerometer; // 加速度传感器
-    private Sensor magnetic; // 地磁场传感器
-    private float lastDirection;
 
-    private float[] accelerometerValues = new float[3];
-    private float[] magneticFieldValues = new float[3];
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
+    private Context mContext;
+    private float lastX;
+    private OnOrientationListener mOnOrientationListener;
 
-    private OnOrientationListener onOrientationListener;
-
-    public MyOrientationListener(Context context) {
-        this.context = context;
+    public MyOrientationListener(Context context)
+    {
+        this.mContext=context;
     }
-
-    // 开始
-    public void start() {
-        // 获得传感器管理器
-        sensorManager = (SensorManager) context
+    public void start()
+    {
+        mSensorManager= (SensorManager) mContext
                 .getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager != null) {
-            // 初始化加速度传感器
-            accelerometer = sensorManager
-                    .getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            // 初始化地磁场传感器
-            magnetic = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if(mSensorManager!= null)
+        {
+            //获得方向传感器
+            mSensor=mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         }
-        // 注册
-        if (accelerometer != null) {
-            sensorManager.registerListener(this,
-                    accelerometer, Sensor.TYPE_ACCELEROMETER);
+        //判断是否有方向传感器
+        if(mSensor!=null)
+        {
+            //注册监听器
+            mSensorManager.registerListener(this,mSensor, SensorManager.SENSOR_DELAY_UI);
+
         }
-        if (magnetic != null) {
-            sensorManager.registerListener(this,
-                    magnetic, Sensor.TYPE_MAGNETIC_FIELD);
+
+
+    }
+    public void stop()
+    {
+        mSensorManager.unregisterListener(this);
+
+    }
+    //方向改变
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if(event.sensor.getType()== Sensor.TYPE_ORIENTATION)
+        {
+            float x=event.values[SensorManager.DATA_X];
+            if(Math.abs(x-lastX)>1.0)
+            {
+                if(mOnOrientationListener!=null)
+                {
+                    mOnOrientationListener.onOrientationChanged(x);
+                }
+            }
+            lastX=x;
+
         }
-        calculateOrientation();
+
+    }
+    public void setOnOrientationListener(OnOrientationListener listener)
+    {
+        mOnOrientationListener=listener;
     }
 
-    // 计算方向
-    private void calculateOrientation() {
-        float[] values = new float[3];
-        float[] R = new float[9];
-        SensorManager.getRotationMatrix(R, null, accelerometerValues,
-                magneticFieldValues);
-        SensorManager.getOrientation(R, values);
-        float direction = (float) Math.toDegrees(values[0]);
+    public interface OnOrientationListener
+    {
+        void onOrientationChanged(float x);
 
-        Log.i("direction", direction + "");
-        if(values[0] < 0) {
-            direction = 360  + direction;
-        }
-        if (Math.abs(direction - lastDirection) >= 30) {
-            onOrientationListener.onOrientationChanged(direction);
-            onOrientationListener.onOrientationChanged(direction);
-        }
-        lastDirection = direction;
-    }
-
-    // 停止检测
-    public void stop() {
-        if(sensorManager != null){
-            sensorManager.unregisterListener(this);
-	}
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        // TODO Auto-generated method stub
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            accelerometerValues = event.values;
-        }
-        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            magneticFieldValues = event.values;
-        }
-        calculateOrientation();
-    }
-
-    public void setOnOrientationListener(OnOrientationListener onOrientationListener) {
-        this.onOrientationListener = onOrientationListener;
-    }
-
-
-    public interface OnOrientationListener {
-        void onOrientationChanged(float direction);
     }
 }

@@ -76,9 +76,9 @@ export default class MapView extends Component {
     }
   }
 
-  updateCenter(center) {
+  updateCenter() {
     if (Platform.OS !== 'web') {
-      react_native.UIManager.dispatchViewManagerCommand(react_native.findNodeHandle(this), COMMAND_UPDATE_CENTER, [center]);
+      react_native.UIManager.dispatchViewManagerCommand(react_native.findNodeHandle(this), COMMAND_UPDATE_CENTER, []);
     }
   }
 

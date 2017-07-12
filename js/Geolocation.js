@@ -145,6 +145,6 @@ export default {
   addOnGetCurrentLocationPosition(handler) {
     DeviceEventEmitter.addListener('onGetCurrentLocationPosition', resp => {
         handler(resp);
-      });
+    });
   }
 };

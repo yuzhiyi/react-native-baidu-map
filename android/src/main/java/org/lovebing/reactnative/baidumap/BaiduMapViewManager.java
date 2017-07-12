@@ -32,6 +32,12 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 
+import org.lovebing.reactnative.baidumap.MyOrientationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.BDLocation;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,10 +59,15 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
     private HashMap<String, List<Marker>> mMarkersMap = new HashMap<>();
     private TextView mMarkerText;
     private MapView mapView;
+    private BaiduMap mBaiduMap;
     private volatile boolean isFirstLoc = true; // 是否首次定位
-
+    private MyOrientationListener myOrientationListener;
+    private MyLocationListenner myListener = new MyLocationListenner();
     public static final int UPDATE_MARKER = 1;
     public static final int UPDATE_CENTER = 2;
+    private float mCurrentX;
+    private LocationClient mlocationClient;
+    private LatLng localCenter = null;
 
     public String getName() {
         return REACT_CLASS;
@@ -71,6 +82,20 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
         mReactContext = context;
         MapView mapView = new MapView(context);
         this.mapView = mapView;
+        mBaiduMap = mapView.getMap();
+        // 开启定位图层
+        mBaiduMap.setMyLocationEnabled(true);
+        // 定位初始化
+        mlocationClient = new LocationClient(context.getApplicationContext());
+        mlocationClient.registerLocationListener(myListener);
+        LocationClientOption option = new LocationClientOption();
+        option.setOpenGps(true); // 打开gps
+        option.setCoorType("bd09ll"); // 设置坐标类型
+        option.setScanSpan(1000);//设置onReceiveLocation()获取位置的频率
+        option.setIsNeedAddress(true);//如想获得具体位置就需要设置为true
+
+        mlocationClient.setLocOption(option);
+        mlocationClient.start();
         setListeners(mapView);
         return mapView;
     }
@@ -110,9 +135,9 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
             case BaiduMapViewManager.UPDATE_MARKER:
                 updateMarker(view, args.getMap(0));
                 break;
-	    case BaiduMapViewManager.UPDATE_CENTER: 
-		updateCenter(view, args.getMap(0));
-		break;
+	        case BaiduMapViewManager.UPDATE_CENTER:
+		      updateCenter(view);
+		    break;
             default:
                 throw new JSApplicationIllegalArgumentException(String.format(
                         "Unsupported commadn %d received by $s",
@@ -220,14 +245,11 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
             }
         }
     }
-    
-    private void updateCenter(MapView mapView, ReadableMap position) {
-	if (position != null) {
-            double latitude = position.getDouble("latitude");
-            double longitude = position.getDouble("longitude");
-            LatLng point = new LatLng(latitude, longitude);
+
+    private void updateCenter(MapView mapView) {
+	if (localCenter != null) {
             MapStatus mapStatus = new MapStatus.Builder()
-                    .target(point)
+                    .target(localCenter)
                     .build();
             MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
             mapView.getMap().animateMapStatus(mapStatusUpdate);
@@ -359,8 +381,48 @@ public class BaiduMapViewManager extends ViewGroupManager<MapView> {
                 return true;
             }
         });
+	    myOrientationListener = new MyOrientationListener(mReactContext.getApplicationContext());
+        myOrientationListener.start();
+        myOrientationListener.setOnOrientationListener(new MyOrientationListener.OnOrientationListener() {
+            @Override
+            public void onOrientationChanged(float x) {
+		          mCurrentX = x;
+            }
+        });
     }
-    
+
+      /**
+     * 定位SDK监听函数
+     */
+    public class MyLocationListenner implements BDLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            // map view 销毁后不在处理新接收的位置
+            if (bdLocation == null || mapView == null) {
+                return;
+            }
+            mBaiduMap.setMyLocationConfigeration(new MyLocationConfiguration(
+            MyLocationConfiguration.LocationMode.NORMAL, true, null));
+            MyLocationData locData = new MyLocationData.Builder()
+                    .accuracy(bdLocation.getRadius())
+                    .direction(mCurrentX)//设定图标方向     // 此处设置开发者获取到的方向信息，顺时针0-360
+                    .latitude(bdLocation.getLatitude())
+                    .longitude(bdLocation.getLongitude()).build();
+            localCenter = new LatLng(bdLocation.getLatitude(),
+                        bdLocation.getLongitude());
+            mBaiduMap.setMyLocationData(locData);
+            if (isFirstLoc) {
+                isFirstLoc = false;
+                LatLng ll = new LatLng(bdLocation.getLatitude(),
+                        bdLocation.getLongitude());
+                MapStatus.Builder builder = new MapStatus.Builder();
+                //地图缩放比设置为18
+                builder.target(ll).zoom(18.0f);
+                mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(builder.build()));
+            }
+        }
+    }
 
     /**
      * @param eventName
