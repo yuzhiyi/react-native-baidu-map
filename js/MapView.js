@@ -1,6 +1,7 @@
 import {
   requireNativeComponent,
   View,
+  ViewPropTypes,
   NativeModules,
   Platform,
   DeviceEventEmitter
@@ -22,7 +23,7 @@ if (Platform.OS !== 'web') {
 
 export default class MapView extends Component {
   static propTypes = {
-    ...View.propTypes,
+    ...(ViewPropTypes || View.propTypes),
     id: PropTypes.string,
     callback: PropTypes.func,
     zoomControlsVisible: PropTypes.bool,
