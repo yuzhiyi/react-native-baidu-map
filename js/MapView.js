@@ -1,16 +1,16 @@
 import {
   requireNativeComponent,
   View,
+  ViewPropTypes,
   NativeModules,
   Platform,
   DeviceEventEmitter
 } from 'react-native';
 
 import React, {
-  Component,
-  PropTypes
+  Component
 } from 'react';
-
+import PropTypes from 'prop-types';
 import MapTypes from './MapTypes';
 
 if (Platform.OS !== 'web') {
@@ -23,7 +23,7 @@ if (Platform.OS !== 'web') {
 
 export default class MapView extends Component {
   static propTypes = {
-    ...View.propTypes,
+    ...(ViewPropTypes || View.propTypes),
     id: PropTypes.string,
     callback: PropTypes.func,
     zoomControlsVisible: PropTypes.bool,
