@@ -98,11 +98,13 @@
 -(void)updateMarker:(BMKPointAnnotation *)annotation option:(NSDictionary *)option {
     CLLocationCoordinate2D coor = [self getCoorFromMarkerOption:option];
     NSString *title = [RCTConvert NSString:option[@"title"]];
+    NSString *status = [RCTConvert NSString:[NSString stringWithFormat:@"%@",option[@"status"]]];
     if(title.length == 0) {
         title = nil;
     }
     annotation.coordinate = coor;
     annotation.title = title;
+    annotation.subtitle = status;
 }
 
 

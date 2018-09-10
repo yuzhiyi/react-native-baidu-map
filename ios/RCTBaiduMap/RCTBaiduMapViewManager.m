@@ -111,7 +111,15 @@ didSelectAnnotationView:(BMKAnnotationView *)view {
     if ([annotation isKindOfClass:[BMKPointAnnotation class]]) {
         BMKPinAnnotationView *newAnnotationView = [[BMKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"myAnnotation"];
         newAnnotationView.pinColor = BMKPinAnnotationColorPurple;
-        newAnnotationView.image = [UIImage imageNamed:@"icon_kezulin"];
+        if ([annotation.subtitle isEqualToString: @"0"]) {
+            newAnnotationView.image = [UIImage imageNamed:@"icon_bukezulin"];
+        } else if ([annotation.subtitle isEqualToString: @"1"]) {
+            newAnnotationView.image = [UIImage imageNamed:@"icon_kezulin"];
+        } else if ([annotation.subtitle isEqualToString: @"2"]) {
+            newAnnotationView.image = [UIImage imageNamed:@"icon_kezulin"];
+        } else {
+            newAnnotationView.image = [UIImage imageNamed:@"icon_yijinzulin"];
+        }
         newAnnotationView.animatesDrop = YES;
         return newAnnotationView;
     }
