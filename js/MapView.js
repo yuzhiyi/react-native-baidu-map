@@ -4,7 +4,8 @@ import {
   ViewPropTypes,
   NativeModules,
   Platform,
-  DeviceEventEmitter
+  DeviceEventEmitter,
+  StyleSheet,
 } from 'react-native';
 
 import React, {
@@ -100,7 +101,7 @@ export default class MapView extends Component {
   render() {
     if (Platform.OS === 'web') {
       return React.createElement('div', {
-        style: this.props.style,
+        style: StyleSheet.flatten(this.props.style),
         id: this.id
       });
     } else {
